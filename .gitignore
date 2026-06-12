@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+.DS_Store
+
+# Generated local model artifacts
+model/*.npz
+model/weights_config.json
+model/checkpoints/
+tokenizer/vocab.json
+data/processed/
+training/loss_log.json
