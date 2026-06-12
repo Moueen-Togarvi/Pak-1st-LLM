@@ -86,6 +86,13 @@ class AgentToolsTest(unittest.TestCase):
             self.assertIn("bash", after.content)
             self.assertNotIn("PERMISSION", after.content)
 
+    def test_agent_handles_basic_small_talk(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            agent = LocalAgent(tmp)
+            self.assertIn("MyAI", agent.handle("hi").content)
+            self.assertIn("MyAI", agent.handle("what is your name").content)
+            self.assertIn("Moueen", agent.handle("my name is Moueen").content)
+
 
 if __name__ == "__main__":
     unittest.main()

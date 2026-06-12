@@ -1,32 +1,6 @@
----
-INPUT: hello
-OUTPUT: hello kya haal hai
----
-INPUT: tum kaun ho
-OUTPUT: main tumhara local AI agent hoon
----
-INPUT: tum kya kar sakte ho
-OUTPUT: main files read kar sakta hoon aur commands plan kar sakta hoon
----
-INPUT: python kya hai
-OUTPUT: python ek programming language hai
----
-INPUT: repo status dikhao
-OUTPUT: git status tool use karo
----
-INPUT: file read karo
-OUTPUT: read_file tool se file ka content dekho
----
-INPUT: shukriya
-OUTPUT: koi baat nahi khushi hui
----
-INPUT: bye
-OUTPUT: khuda hafiz phir milte hain
----
-INPUT: plan banao
-OUTPUT: pehle context read karo phir clear plan do
----
-INPUT: safe rehna
-OUTPUT: destructive command permission ke bina mat chalao
----
+# Add only your own taught pairs here.
+# Format:
+# ---
+# INPUT: your question
+# OUTPUT: your answer
 

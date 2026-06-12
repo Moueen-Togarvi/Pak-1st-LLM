@@ -2,12 +2,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from data.data_prep import build_training_sequences, ensure_sample_data
+from data.data_prep import build_training_sequences, ensure_sample_data, load_conversation_folder
+from myai.memory_store import MemoryStore
 from model.transformer import ModelConfig, TransformerLM
 from tokenizer.byte_tokenizer import ByteTokenizer
 
 
 DEFAULT_MODEL_CONFIG = ModelConfig()
+FALLBACK_PREFIX = "Mujhe is ka exact jawab abhi user data se nahi mila."
 
 
 def ensure_project_setup(repo_root: str | Path = ".") -> None:
@@ -94,7 +96,15 @@ def generate_reply(
     user_text: str,
     *,
     max_new_tokens: int = 80,
+    repo_root: str | Path = ".",
 ) -> str:
+    known_reply = lookup_known_reply(user_text, repo_root=repo_root)
+    if known_reply is not None:
+        return known_reply
+
+    if not should_use_raw_model(repo_root):
+        return fallback_reply(user_text, repo_root=repo_root)
+
     prompt = f"User: {user_text}\nAI:"
     input_ids = tokenizer.encode(prompt, add_bos=True, add_eos=False, max_length=model.config.max_seq_len)
     generated = model.generate(
@@ -108,8 +118,40 @@ def generate_reply(
     text = tokenizer.decode(new_ids)
     cleaned = text.split("User:", 1)[0].strip()
     if not _looks_readable(cleaned):
-        return "(model is still undertrained; add data and run train for more epochs)"
+        return fallback_reply(user_text, repo_root=repo_root)
     return cleaned
+
+
+def should_use_raw_model(repo_root: str | Path = ".") -> bool:
+    flag_path = Path(repo_root) / ".myai" / "use_raw_model"
+    return flag_path.exists()
+
+
+def fallback_reply(user_text: str, *, repo_root: str | Path = ".") -> str:
+    return (
+        f"{FALLBACK_PREFIX} "
+        "Agle line mein sahi jawab likh do; main automatically seekh lunga."
+    )
+
+
+def is_fallback_reply(text: str) -> bool:
+    return text.startswith(FALLBACK_PREFIX)
+
+
+def lookup_known_reply(user_text: str, *, repo_root: str | Path = ".") -> str | None:
+    normalized = _normalize_text(user_text)
+    if not normalized:
+        return None
+
+    memory_reply = MemoryStore(repo_root).answer_from_memory(user_text)
+    if memory_reply is not None:
+        return memory_reply
+
+    conversations_folder = Path(repo_root) / "data" / "raw"
+    for pair in load_conversation_folder(conversations_folder):
+        if _normalize_text(pair.user) == normalized:
+            return pair.assistant
+    return None
 
 
 def _looks_readable(text: str) -> bool:
@@ -120,3 +162,9 @@ def _looks_readable(text: str) -> bool:
         return False
     printable = sum(1 for char in visible if char.isprintable())
     return printable / max(1, len(visible)) > 0.9
+
+
+def _normalize_text(text: str) -> str:
+    lowered = text.lower().strip()
+    cleaned = "".join(char if char.isalnum() or char.isspace() else " " for char in lowered)
+    return " ".join(cleaned.split())

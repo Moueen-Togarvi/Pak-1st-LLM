@@ -6,6 +6,7 @@ from pathlib import Path
 from agent.memory import MemoryLoader
 from agent.router import DeterministicRouter
 from agent.skills import SkillLoader
+from myai.memory_store import MemoryStore
 from tools.registry import ToolRegistry
 
 
@@ -20,6 +21,7 @@ class LocalAgent:
         self.repo_root = Path(repo_root or Path.cwd()).resolve()
         self.tools = ToolRegistry(self.repo_root)
         self.memory = MemoryLoader(self.repo_root)
+        self.chat_memory = MemoryStore(self.repo_root)
         self.skills = SkillLoader(self.repo_root)
         self.router = DeterministicRouter()
         self.execute_mode = False
@@ -32,14 +34,20 @@ class LocalAgent:
             state = "enabled" if self.execute_mode else "disabled"
             return AgentReply(f"Execute mode {state}. Bash/edit tools now {'can' if self.execute_mode else 'cannot'} run.")
         if lowered == "/memory":
-            return AgentReply(self.memory.render())
+            return AgentReply(self.memory.render() + "\n\n## Chat Memory\n" + self.chat_memory.summary())
         if lowered == "/context":
             return AgentReply(self.context_summary())
         if lowered == "/help":
             return AgentReply(self.router.help_text())
 
+        memory_answer = self.chat_memory.answer_from_memory(text)
+        if memory_answer is not None:
+            return AgentReply(memory_answer)
+
         action = self.router.route(text)
         if action.action == "final":
+            if not lowered.startswith("/"):
+                self.chat_memory.remember_turn(text, action.content, source="agent")
             return AgentReply(action.content, action.to_json())
 
         result = self.tools.run(action.tool, action.args or {}, execute=self.execute_mode)
@@ -61,4 +69,3 @@ class LocalAgent:
                 skill_index,
             ]
         )
-

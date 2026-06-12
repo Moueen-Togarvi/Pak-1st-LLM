@@ -15,19 +15,24 @@ class TerminalUI:
             return text
         return f"\033[{code}m{text}\033[0m"
 
-    def header(self) -> None:
+    def header(
+        self,
+        title: str = "MYAI Local Coding Agent",
+        subtitle: str = "Owned tiny LLM + Claude-Code-style local tools",
+    ) -> None:
         width = min(shutil.get_terminal_size((80, 20)).columns, 96)
         line = "=" * width
         print(self.color(line, "96"))
-        print(self.color("MYAI Local Coding Agent", "1;96"))
-        print("Owned tiny LLM + Claude-Code-style local tools")
+        print(self.color(title, "1;96"))
+        print(subtitle)
         print("Type /help for commands. Type Ctrl-D or /quit to exit.")
         print(self.color(line, "96"))
 
     def prompt(self) -> str:
         try:
             return input(self.color("myai> ", "92"))
-        except EOFError:
+        except (EOFError, KeyboardInterrupt):
+            print()
             return "/quit"
 
     def print_reply(self, text: str) -> None:
@@ -39,4 +44,3 @@ class TerminalUI:
                 continue
             print(textwrap.fill(paragraph, width=width, replace_whitespace=False))
         print()
-

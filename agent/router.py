@@ -21,6 +21,22 @@ class DeterministicRouter:
         lowered = stripped.lower()
         if lowered in {"help", "/help"}:
             return AgentAction("final", content=self.help_text())
+        if lowered in {"hi", "hello", "hey", "salam", "assalam o alaikum"}:
+            return AgentAction(
+                "final",
+                content="Hello. Main MyAI hoon, tumhara local coding agent. /help likho tools dekhne ke liye.",
+            )
+        if lowered in {"what is your name", "your name", "who are you", "tum kaun ho", "tumhara naam kya hai"}:
+            return AgentAction(
+                "final",
+                content="Mera naam MyAI hai. Main local Claude-Code-style coding agent hoon.",
+            )
+        if lowered.startswith(("my name is ", "mera naam ")):
+            name = stripped.split()[-1].strip(".,!?")
+            return AgentAction(
+                "final",
+                content=f"Nice to meet you, {name}. Main abhi session mein tools aur repo context ke saath help kar sakta hoon.",
+            )
         if lowered in {"status", "git status", "/status"}:
             return AgentAction("tool", tool="git_status", args={})
         if lowered in {"diff", "git diff", "/diff"}:
@@ -66,6 +82,8 @@ class DeterministicRouter:
                 "Commands:",
                 "  /help       Show this help",
                 "  /execute    Toggle bash/edit permission mode",
+                "  /teach A => B  Save exact user-taught Q/A",
+                "  /learn      Extra manual training boost",
                 "  /diff       Show git diff",
                 "  /memory     Show loaded memory files",
                 "  /context    Show repo context summary",
@@ -79,6 +97,11 @@ class DeterministicRouter:
                 "  run COMMAND",
                 "  status",
                 "  diff",
+                "",
+                "Auto-teach examples:",
+                "  hi => hello",
+                "  Q: hi A: hello",
+                "  hi ka jawab hello hai",
+                "  jab main hi kaho to hello bolna",
             ]
         )
-

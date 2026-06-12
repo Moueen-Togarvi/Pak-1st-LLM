@@ -1,0 +1,6 @@
+---
+INPUT: hi
+OUTPUT: apny hello gretting waghera sy dena hn
+---
+INPUT: hi ka jwab hello hn
+OUTPUT: hi
